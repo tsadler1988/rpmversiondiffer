@@ -34,10 +34,10 @@ mkdir "$RPM_1"
 mkdir "$RPM_2"
 
 cd "$RPM_1"
-rpm2cpio "../tmp/$RPM_1.rpm" | cpio -idmv --quiet
+rpm2cpio "../tmp/$RPM_1.rpm" | cpio -idm
 
 cd "../$RPM_2"
-rpm2cpio "../tmp/$RPM_2.rpm" | cpio -idmv --quiet
+rpm2cpio "../tmp/$RPM_2.rpm" | cpio -idm
 
 cd ../
 ls
