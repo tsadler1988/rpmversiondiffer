@@ -3,59 +3,54 @@
 set -e
 
 if [ "$#" -lt 3 ] || [ "$#" -gt 4 ]; then
-	echo "Usage: rpmdiffer <RPM NAME> <REPO1> <REPO2> [<EXCLUDE>]"
+	echo "Usage: rpmversiondiffer <REPO> <RPM1> <RPM2> [<EXCLUDE>]"
 	exit 1
 fi
 
-RPM_NAME="$1"
-REPO_1="$2"
-REPO_2="$3"
+REPO="$1"
+RPM_1="$2"
+RPM_2="$3"
 EXCLUDE="$4"
 
-echo "RPM NAME = $RPM_NAME"
-echo "REPO 1 = $REPO_1"
-echo "REPO 2 = $REPO_2"
+echo "REPO = $REPO"
+echo "RPM 1 = $RPM_1"
+echo "RPM 2 = $RPM_2"
 if [ -n "$4" ]; then 
 	echo "Excluding files containing \"$EXCLUDE\""
 fi
 
 echo "Removing any previously filled folders..."
-rm -fr tmp $REPO_1 $REPO_2
+rm -fr tmp $RPM_1 $RPM_2
 mkdir tmp
 cd tmp
 pwd
 
-yumdownloader --disablerepo=* --enablerepo="$REPO_1" "$RPM_NAME"
-RPM_1=`ls`
+yumdownloader --disablerepo=* --enablerepo="$REPO" "$RPM_1"
 
-yumdownloader --disablerepo=* --enablerepo="$REPO_2" "$RPM_NAME"
-RPM_2=`ls | grep -v "$RPM_1"`
-
-echo "RPM 1 = $RPM_1"
-echo "RPM 2 = $RPM_2"
+yumdownloader --disablerepo=* --enablerepo="$REPO" "$RPM_2"
 
 cd ../
-mkdir "$REPO_1"
-mkdir "$REPO_2"
+mkdir "$RPM_1"
+mkdir "$RPM_2"
 
-cd "$REPO_1"
-rpm2cpio "../tmp/$RPM_1" | cpio -idmv
+cd "$RPM_1"
+rpm2cpio "../tmp/$RPM_1.rpm" | cpio -idmv --quiet
 
-cd "../$REPO_2"
-rpm2cpio "../tmp/$RPM_2" | cpio -idmv
+cd "../$RPM_2"
+rpm2cpio "../tmp/$RPM_2.rpm" | cpio -idmv --quiet
 
 cd ../
 ls
 
 if [ -n "$4" ]; then 
 	echo "Exlcuding files containing \"$EXCLUDE\""
-	find $REPO_1 -name "*$EXCLUDE*" -type f -delete
-	find $REPO_2 -name "*$EXCLUDE*" -type f -delete
+	find $RPM_1 -name "*$EXCLUDE*" -type f -delete
+	find $RPM_2 -name "*$EXCLUDE*" -type f -delete
 fi
 
-diff -r $REPO_1 $REPO_2 > rpmdiff.diff || :
+diff -r $RPM_1 $RPM_2 > rpmversiondiff.diff || :
 
 rm -rf tmp/
-rm -rf "$REPO_1"
-rm -rf "$REPO_2"
+rm -rf "$RPM_1"
+rm -rf "$RPM_2"
 
